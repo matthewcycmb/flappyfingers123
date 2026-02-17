@@ -153,6 +153,7 @@ function gameOver() {
   audio.playHit();
   restartCooldown = 30; // frames before restart allowed
   flashAlpha = 0.5;
+  scoreManager.addToLeaderboard(scoreManager.score);
 }
 
 // ── Resize handling ────────────────────────────────────────
@@ -305,7 +306,8 @@ function gameLoop(timestamp) {
       GAME_HEIGHT,
       scoreManager.score,
       scoreManager.highScore,
-      scoreManager.isNewHighScore
+      scoreManager.isNewHighScore,
+      scoreManager.getLeaderboard()
     );
   }
 

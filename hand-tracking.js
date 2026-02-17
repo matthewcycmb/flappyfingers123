@@ -85,6 +85,8 @@ export class HandTracker {
         this.processGesture(this.landmarks);
       } else {
         this.landmarks = null;
+        // Reset gesture so next detection re-triggers pinch
+        this.gestureState = 'OPEN';
       }
     } catch {
       // detection frame skip

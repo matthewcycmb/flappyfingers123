@@ -85,7 +85,7 @@ export function drawReadyScreen(ctx, W, H, handDetected) {
   ctx.restore();
 }
 
-export function drawGameOverScreen(ctx, W, H, score, highScore, isNewHigh) {
+export function drawGameOverScreen(ctx, W, H, score, highScore, isNewHigh, leaderboard) {
   // Dark overlay
   ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
   ctx.fillRect(0, 0, W, H);
@@ -93,11 +93,11 @@ export function drawGameOverScreen(ctx, W, H, score, highScore, isNewHigh) {
   ctx.save();
   ctx.textAlign = 'center';
 
-  // Score panel background
+  // Score panel
   const panelW = 260;
-  const panelH = 240;
+  const panelH = 180;
   const px = (W - panelW) / 2;
-  const py = H * 0.25;
+  const py = H * 0.08;
 
   // Panel shadow
   ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -113,7 +113,6 @@ export function drawGameOverScreen(ctx, W, H, score, highScore, isNewHigh) {
   roundRect(ctx, px, py, panelW, panelH, 16);
   ctx.stroke();
 
-  // Inner border
   ctx.strokeStyle = 'rgba(255,255,255,0.3)';
   ctx.lineWidth = 2;
   roundRect(ctx, px + 6, py + 6, panelW - 12, panelH - 12, 12);
@@ -121,34 +120,97 @@ export function drawGameOverScreen(ctx, W, H, score, highScore, isNewHigh) {
 
   // Game Over text
   ctx.fillStyle = '#C0392B';
-  ctx.font = 'bold 36px "Segoe UI", Arial, sans-serif';
-  ctx.fillText('Game Over', W / 2, py + 48);
+  ctx.font = 'bold 32px "Segoe UI", Arial, sans-serif';
+  ctx.fillText('Game Over', W / 2, py + 40);
 
   // Score
   ctx.fillStyle = '#333';
-  ctx.font = '18px "Segoe UI", Arial, sans-serif';
-  ctx.fillText('Score', W / 2, py + 85);
-  ctx.font = 'bold 42px "Segoe UI", Arial, sans-serif';
-  ctx.fillStyle = '#2C3E50';
-  ctx.fillText(score.toString(), W / 2, py + 130);
-
-  // High score
   ctx.font = '16px "Segoe UI", Arial, sans-serif';
+  ctx.fillText('Score', W / 2 - 50, py + 75);
+  ctx.fillText('Best', W / 2 + 50, py + 75);
+  ctx.font = 'bold 36px "Segoe UI", Arial, sans-serif';
+  ctx.fillStyle = '#2C3E50';
+  ctx.fillText(score.toString(), W / 2 - 50, py + 115);
   ctx.fillStyle = '#666';
-  ctx.fillText(`Best: ${highScore}`, W / 2, py + 160);
+  ctx.font = 'bold 28px "Segoe UI", Arial, sans-serif';
+  ctx.fillText(highScore.toString(), W / 2 + 50, py + 112);
 
-  // New high score badge
   if (isNewHigh) {
     ctx.fillStyle = '#E74C3C';
-    ctx.font = 'bold 18px "Segoe UI", Arial, sans-serif';
-    ctx.fillText('New High Score!', W / 2, py + 190);
+    ctx.font = 'bold 16px "Segoe UI", Arial, sans-serif';
+    ctx.fillText('New High Score!', W / 2, py + 145);
+  }
+
+  // Leaderboard panel
+  if (leaderboard && leaderboard.length > 0) {
+    const lbTop = py + panelH + 14;
+    const rowH = 24;
+    const shown = leaderboard.slice(0, 5);
+    const lbH = 36 + shown.length * rowH + 10;
+    const lbW = 260;
+    const lx = (W - lbW) / 2;
+
+    // Panel shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    roundRect(ctx, lx + 3, lbTop + 3, lbW, lbH, 12);
+    ctx.fill();
+
+    // Panel bg
+    ctx.fillStyle = 'rgba(44, 62, 80, 0.85)';
+    roundRect(ctx, lx, lbTop, lbW, lbH, 12);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, lx, lbTop, lbW, lbH, 12);
+    ctx.stroke();
+
+    // Title
+    ctx.fillStyle = '#F7DC6F';
+    ctx.font = 'bold 16px "Segoe UI", Arial, sans-serif';
+    ctx.fillText('Leaderboard', W / 2, lbTop + 24);
+
+    // Rows
+    ctx.font = '14px "Segoe UI", monospace';
+    for (let i = 0; i < shown.length; i++) {
+      const y = lbTop + 48 + i * rowH;
+      const entry = shown[i];
+      const isCurrent = entry.score === score && i === shown.findIndex(e => e.score === score);
+
+      if (isCurrent) {
+        ctx.fillStyle = 'rgba(247, 220, 111, 0.15)';
+        roundRect(ctx, lx + 8, y - 14, lbW - 16, rowH - 2, 4);
+        ctx.fill();
+      }
+
+      // Rank
+      ctx.textAlign = 'left';
+      ctx.fillStyle = i === 0 ? '#F1C40F' : i === 1 ? '#BDC3C7' : i === 2 ? '#CD7F32' : 'rgba(255,255,255,0.6)';
+      ctx.fillText(`#${i + 1}`, lx + 20, y);
+
+      // Score
+      ctx.textAlign = 'center';
+      ctx.fillStyle = isCurrent ? '#F7DC6F' : '#FFF';
+      ctx.font = isCurrent ? 'bold 14px "Segoe UI", monospace' : '14px "Segoe UI", monospace';
+      ctx.fillText(entry.score.toString(), W / 2, y);
+
+      // Date
+      ctx.textAlign = 'right';
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '11px "Segoe UI", Arial, sans-serif';
+      const d = new Date(entry.date);
+      ctx.fillText(`${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`, lx + lbW - 20, y);
+
+      ctx.font = '14px "Segoe UI", monospace';
+      ctx.textAlign = 'center';
+    }
   }
 
   // Play again
+  ctx.textAlign = 'center';
   ctx.font = '16px "Segoe UI", Arial, sans-serif';
   const restartAlpha = 0.5 + Math.sin(Date.now() * 0.004) * 0.5;
   ctx.fillStyle = `rgba(255,255,255,${restartAlpha})`;
-  ctx.fillText('Pinch / Click / Space to retry', W / 2, py + panelH + 40);
+  ctx.fillText('Pinch / Click / Space to retry', W / 2, H - 35);
 
   ctx.restore();
 }

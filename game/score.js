@@ -34,4 +34,25 @@ export class ScoreManager {
       // localStorage not available
     }
   }
+
+  addToLeaderboard(score) {
+    const board = this.getLeaderboard();
+    board.push({ score, date: Date.now() });
+    board.sort((a, b) => b.score - a.score);
+    const top10 = board.slice(0, 10);
+    try {
+      localStorage.setItem('flappyFingers_leaderboard', JSON.stringify(top10));
+    } catch {
+      // localStorage not available
+    }
+    return top10;
+  }
+
+  getLeaderboard() {
+    try {
+      return JSON.parse(localStorage.getItem('flappyFingers_leaderboard')) || [];
+    } catch {
+      return [];
+    }
+  }
 }
