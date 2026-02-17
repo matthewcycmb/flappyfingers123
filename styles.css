@@ -1,0 +1,106 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1a1a2e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+#gameContainer {
+  position: relative;
+  /* dimensions set by JS */
+}
+
+#gameCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 12px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+#webcamVideo {
+  display: none;
+}
+
+/* ── UI Overlay ───────────────────────────────────────── */
+
+#uiOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+#startBtn {
+  pointer-events: all;
+  background: linear-gradient(180deg, #F7DC6F 0%, #F0B429 100%);
+  border: 3px solid #D4AC0D;
+  border-radius: 50px;
+  padding: 16px 48px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #5D4E14;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  margin-top: 120px;
+}
+
+#startBtn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+#startBtn:active {
+  transform: scale(0.98);
+}
+
+#loadingMsg {
+  display: none;
+  color: #FFF;
+  font-size: 16px;
+  margin-top: 130px;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+/* ── Mute Button ──────────────────────────────────────── */
+
+#muteBtn {
+  pointer-events: all;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 6px 14px;
+  color: #FFF;
+  font-size: 12px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s;
+  z-index: 10;
+}
+
+#muteBtn:hover {
+  background: rgba(0, 0, 0, 0.55);
+}
