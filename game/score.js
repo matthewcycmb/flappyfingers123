@@ -35,9 +35,9 @@ export class ScoreManager {
     }
   }
 
-  addToLeaderboard(score) {
+  addToLeaderboard(score, name) {
     const board = this.getLeaderboard();
-    board.push({ score, date: Date.now() });
+    board.push({ score, name: name || '', date: Date.now() });
     board.sort((a, b) => b.score - a.score);
     const top10 = board.slice(0, 10);
     try {

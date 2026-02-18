@@ -3,57 +3,152 @@ export function drawMenuScreen(ctx, W, H) {
   drawBackground(ctx, W, H);
 
   // Darken overlay
-  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  const overlayGrad = ctx.createLinearGradient(0, 0, 0, H);
+  overlayGrad.addColorStop(0, 'rgba(0,0,0,0.05)');
+  overlayGrad.addColorStop(0.5, 'rgba(0,0,0,0.12)');
+  overlayGrad.addColorStop(1, 'rgba(0,0,0,0.25)');
+  ctx.fillStyle = overlayGrad;
   ctx.fillRect(0, 0, W, H);
 
-  // Title
   ctx.save();
   ctx.textAlign = 'center';
 
-  // Title shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.font = 'bold 52px "Segoe UI", Arial, sans-serif';
-  ctx.fillText('Flappy', W / 2 + 2, H * 0.22 + 2);
-  ctx.font = 'bold 56px "Segoe UI", Arial, sans-serif';
-  ctx.fillText('Fingers', W / 2 + 2, H * 0.30 + 2);
+  // Animated bird on menu
+  const birdY = H * 0.42 + Math.sin(Date.now() * 0.003) * 10;
+  const wingAngle = Math.sin(Date.now() * 0.008) * 15;
+  drawMenuBird(ctx, W / 2, birdY, wingAngle);
 
-  // Title text
+  // Title with bounce
+  const titleBounce = Math.sin(Date.now() * 0.002) * 3;
+
+  // "Flappy" shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.font = 'bold 54px "Segoe UI", Arial, sans-serif';
+  ctx.fillText('Flappy', W / 2 + 2, H * 0.15 + 3 + titleBounce);
+
+  // "Flappy" text
   ctx.fillStyle = '#FFF';
-  ctx.font = 'bold 52px "Segoe UI", Arial, sans-serif';
-  ctx.fillText('Flappy', W / 2, H * 0.22);
+  ctx.font = 'bold 54px "Segoe UI", Arial, sans-serif';
+  ctx.fillText('Flappy', W / 2, H * 0.15 + titleBounce);
   ctx.strokeStyle = '#D35400';
   ctx.lineWidth = 3;
-  ctx.strokeText('Flappy', W / 2, H * 0.22);
+  ctx.strokeText('Flappy', W / 2, H * 0.15 + titleBounce);
 
+  // "Fingers" shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.font = 'bold 58px "Segoe UI", Arial, sans-serif';
+  ctx.fillText('Fingers', W / 2 + 2, H * 0.23 + 3 + titleBounce);
+
+  // "Fingers" text
   ctx.fillStyle = '#F7DC6F';
-  ctx.font = 'bold 56px "Segoe UI", Arial, sans-serif';
-  ctx.fillText('Fingers', W / 2, H * 0.30);
+  ctx.font = 'bold 58px "Segoe UI", Arial, sans-serif';
+  ctx.fillText('Fingers', W / 2, H * 0.23 + titleBounce);
   ctx.strokeStyle = '#D4AC0D';
   ctx.lineWidth = 3;
-  ctx.strokeText('Fingers', W / 2, H * 0.30);
+  ctx.strokeText('Fingers', W / 2, H * 0.23 + titleBounce);
+
+  // Hand icon
+  const handAlpha = 0.6 + Math.sin(Date.now() * 0.004) * 0.3;
+  ctx.font = '40px "Segoe UI", Arial, sans-serif';
+  ctx.fillStyle = `rgba(255,255,255,${handAlpha})`;
+  ctx.fillText('\u{1F90C}', W / 2, H * 0.33);
 
   // Subtitle
-  ctx.font = '20px "Segoe UI", Arial, sans-serif';
+  ctx.font = 'bold 20px "Segoe UI", Arial, sans-serif';
   ctx.fillStyle = '#FFF';
-  ctx.fillText('Pinch to flap!', W / 2, H * 0.37);
+  ctx.fillText('Pinch to flap!', W / 2, H * 0.58);
 
-  // Instructions
-  ctx.font = '15px "Segoe UI", Arial, sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.fillText('Touch your thumb and index finger', W / 2, H * 0.52);
-  ctx.fillText('together to make the bird jump', W / 2, H * 0.56);
-  ctx.fillText('', W / 2, H * 0.62);
-  ctx.fillText('Spacebar or Click also work!', W / 2, H * 0.62);
+  // Instructions panel
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  roundRect(ctx, W / 2 - 140, H * 0.62, 280, 80, 12);
+  ctx.fill();
+
+  ctx.font = '14px "Segoe UI", Arial, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.fillText('Touch your thumb & index finger', W / 2, H * 0.67);
+  ctx.fillText('together to make the bird jump', W / 2, H * 0.71);
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '13px "Segoe UI", Arial, sans-serif';
+  ctx.fillText('Spacebar or Click also work!', W / 2, H * 0.76);
 
   // Privacy notice
-  ctx.font = '11px "Segoe UI", Arial, sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.45)';
-  ctx.fillText(
-    'Camera feed is processed entirely on your device.',
-    W / 2,
-    H - 80
-  );
-  ctx.fillText('No video is recorded or transmitted.', W / 2, H - 65);
+  ctx.font = '10px "Segoe UI", Arial, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.fillText('Camera processed on-device. No video transmitted.', W / 2, H - 70);
+
+  ctx.restore();
+}
+
+function drawMenuBird(ctx, x, y, wingAngle) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.beginPath();
+  ctx.ellipse(3, 5, 28, 20, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Body
+  ctx.fillStyle = '#F7DC6F';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 28, 20, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#D4AC0D';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Belly
+  ctx.fillStyle = '#FCF3CF';
+  ctx.beginPath();
+  ctx.ellipse(3, 4, 18, 13, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Wing
+  ctx.save();
+  ctx.translate(-3, 3);
+  ctx.rotate((wingAngle * Math.PI) / 180);
+  ctx.fillStyle = '#F0C230';
+  ctx.beginPath();
+  ctx.ellipse(0, 6, 14, 9, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#D4AC0D';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+
+  // Eye
+  ctx.fillStyle = 'white';
+  ctx.beginPath();
+  ctx.arc(12, -7, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Pupil
+  ctx.fillStyle = '#222';
+  ctx.beginPath();
+  ctx.arc(14, -7, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Shine
+  ctx.fillStyle = 'white';
+  ctx.beginPath();
+  ctx.arc(16, -9, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Beak
+  ctx.fillStyle = '#E74C3C';
+  ctx.beginPath();
+  ctx.moveTo(20, -2);
+  ctx.lineTo(36, 3);
+  ctx.lineTo(20, 8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#C0392B';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
 
   ctx.restore();
 }
@@ -85,7 +180,7 @@ export function drawReadyScreen(ctx, W, H, handDetected) {
   ctx.restore();
 }
 
-export function drawGameOverScreen(ctx, W, H, score, highScore, isNewHigh, leaderboard) {
+export function drawGameOverScreen(ctx, W, H, score, highScore, isNewHigh, leaderboard, playerName) {
   // Dark overlay
   ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
   ctx.fillRect(0, 0, W, H);
@@ -174,9 +269,10 @@ export function drawGameOverScreen(ctx, W, H, score, highScore, isNewHigh, leade
     for (let i = 0; i < shown.length; i++) {
       const y = lbTop + 48 + i * rowH;
       const entry = shown[i];
-      const isCurrent = entry.score === score && i === shown.findIndex(e => e.score === score);
+      const name = entry.name || playerName || '???';
+      const isYou = name === playerName && entry.score === score;
 
-      if (isCurrent) {
+      if (isYou) {
         ctx.fillStyle = 'rgba(247, 220, 111, 0.15)';
         roundRect(ctx, lx + 8, y - 14, lbW - 16, rowH - 2, 4);
         ctx.fill();
@@ -185,22 +281,21 @@ export function drawGameOverScreen(ctx, W, H, score, highScore, isNewHigh, leade
       // Rank
       ctx.textAlign = 'left';
       ctx.fillStyle = i === 0 ? '#F1C40F' : i === 1 ? '#BDC3C7' : i === 2 ? '#CD7F32' : 'rgba(255,255,255,0.6)';
-      ctx.fillText(`#${i + 1}`, lx + 20, y);
+      ctx.font = 'bold 14px "Segoe UI", monospace';
+      ctx.fillText(`#${i + 1}`, lx + 16, y);
+
+      // Name
+      ctx.fillStyle = isYou ? '#F7DC6F' : 'rgba(255,255,255,0.85)';
+      ctx.font = isYou ? 'bold 13px "Segoe UI", sans-serif' : '13px "Segoe UI", sans-serif';
+      const displayName = name.length > 10 ? name.slice(0, 10) + '..' : name;
+      ctx.fillText(displayName, lx + 52, y);
 
       // Score
-      ctx.textAlign = 'center';
-      ctx.fillStyle = isCurrent ? '#F7DC6F' : '#FFF';
-      ctx.font = isCurrent ? 'bold 14px "Segoe UI", monospace' : '14px "Segoe UI", monospace';
-      ctx.fillText(entry.score.toString(), W / 2, y);
-
-      // Date
       ctx.textAlign = 'right';
-      ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.font = '11px "Segoe UI", Arial, sans-serif';
-      const d = new Date(entry.date);
-      ctx.fillText(`${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`, lx + lbW - 20, y);
+      ctx.fillStyle = isYou ? '#F7DC6F' : '#FFF';
+      ctx.font = isYou ? 'bold 14px "Segoe UI", monospace' : '14px "Segoe UI", monospace';
+      ctx.fillText(entry.score.toString(), lx + lbW - 18, y);
 
-      ctx.font = '14px "Segoe UI", monospace';
       ctx.textAlign = 'center';
     }
   }

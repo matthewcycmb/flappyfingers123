@@ -13,6 +13,12 @@ import {
   drawGround,
 } from './ui/screens.js';
 import { CameraPiP } from './ui/camera-pip.js';
+import {
+  initLeaderboard,
+  submitScore,
+  getTopScores,
+  isOnline,
+} from './leaderboard.js';
 
 // ── Constants ──────────────────────────────────────────────
 const GAME_WIDTH = 480;
@@ -33,6 +39,8 @@ let cameraReady = false;
 let restartCooldown = 0;
 let flashAlpha = 0;
 let frameCount = 0;
+let playerName = '';
+let sharedLeaderboard = null;
 
 // ── Canvas setup ───────────────────────────────────────────
 const canvas = document.getElementById('gameCanvas');
@@ -50,6 +58,53 @@ const cameraPiP = new CameraPiP();
 
 const videoEl = document.getElementById('webcamVideo');
 
+// ── Name handling ──────────────────────────────────────────
+const nameOverlay = document.getElementById('nameOverlay');
+const nameInput = document.getElementById('nameInput');
+const nameSubmitBtn = document.getElementById('nameSubmitBtn');
+
+function loadPlayerName() {
+  try {
+    return localStorage.getItem('flappyFingers_playerName') || '';
+  } catch {
+    return '';
+  }
+}
+
+function savePlayerName(name) {
+  playerName = name;
+  try {
+    localStorage.setItem('flappyFingers_playerName', name);
+  } catch {}
+}
+
+function showNameInput() {
+  nameOverlay.classList.add('visible');
+  nameInput.value = playerName;
+  nameInput.focus();
+}
+
+function hideNameInput() {
+  nameOverlay.classList.remove('visible');
+}
+
+function confirmName() {
+  const name = nameInput.value.trim();
+  if (!name) return;
+  savePlayerName(name);
+  hideNameInput();
+  state = 'READY';
+}
+
+nameSubmitBtn.addEventListener('click', confirmName);
+nameInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') confirmName();
+  e.stopPropagation();
+});
+nameInput.addEventListener('keyup', (e) => e.stopPropagation());
+
+playerName = loadPlayerName();
+
 // ── Mute button ────────────────────────────────────────────
 const muteBtn = document.getElementById('muteBtn');
 muteBtn.addEventListener('click', () => {
@@ -60,6 +115,9 @@ muteBtn.addEventListener('click', () => {
 // ── Start button ───────────────────────────────────────────
 const startBtn = document.getElementById('startBtn');
 const loadingMsg = document.getElementById('loadingMsg');
+
+// Init Firebase leaderboard in background
+initLeaderboard();
 
 startBtn.addEventListener('click', async () => {
   audio.init();
@@ -75,16 +133,21 @@ startBtn.addEventListener('click', async () => {
     await handTracker.startCamera();
     cameraReady = true;
     loadingMsg.style.display = 'none';
-    state = 'READY';
   } catch (e) {
     console.error('Camera/tracking setup failed:', e);
     loadingMsg.textContent = 'Camera unavailable — use Space/Click to play!';
     loadingMsg.style.color = '#FFD54F';
     cameraReady = false;
-    state = 'READY';
     setTimeout(() => {
       loadingMsg.style.display = 'none';
     }, 3000);
+  }
+
+  // Show name input if no name saved, otherwise go to READY
+  if (!playerName) {
+    showNameInput();
+  } else {
+    state = 'READY';
   }
 });
 
@@ -145,6 +208,7 @@ function startGame() {
 
 function resetGame() {
   audio.playSwoosh();
+  sharedLeaderboard = null;
   state = 'READY';
 }
 
@@ -153,7 +217,13 @@ function gameOver() {
   audio.playHit();
   restartCooldown = 30; // frames before restart allowed
   flashAlpha = 0.5;
-  scoreManager.addToLeaderboard(scoreManager.score);
+  scoreManager.addToLeaderboard(scoreManager.score, playerName);
+
+  // Submit to shared leaderboard and fetch latest
+  submitScore(playerName, scoreManager.score);
+  getTopScores(10).then((scores) => {
+    if (scores) sharedLeaderboard = scores;
+  });
 }
 
 // ── Resize handling ────────────────────────────────────────
@@ -307,7 +377,8 @@ function gameLoop(timestamp) {
       scoreManager.score,
       scoreManager.highScore,
       scoreManager.isNewHighScore,
-      scoreManager.getLeaderboard()
+      sharedLeaderboard || scoreManager.getLeaderboard(),
+      playerName
     );
   }
 
