@@ -89,7 +89,7 @@ function hideNameInput() {
 }
 
 function confirmName() {
-  const name = nameInput.value.trim();
+  const name = nameInput.value.trim().slice(0, 16);
   if (!name) return;
   savePlayerName(name);
   hideNameInput();
